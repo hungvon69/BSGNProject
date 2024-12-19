@@ -50,12 +50,15 @@ class GoogleMapsViewController: UIViewController, CLLocationManagerDelegate, UIS
         customPlace?.name = "Custom Place"
         customPlace?.id = "custom"
         view.addSubview(button)
+        view.bringSubviewToFront(button)
     }
     override func viewDidLayoutSubviews() {
         super.viewDidLayoutSubviews()
         mapView.frame = view.bounds
-        button.frame = CGRect(x: 0, y: view.bounds.height - 50, width: view.bounds.width, height: 50)
+        button.frame = CGRect(x: 0, y: view.bounds.height - 100, width: view.bounds.width, height: 50)
         button.layer.cornerRadius = 25
+        button.backgroundColor = mainColor
+        button.tintColor = .black
     }
     
     // Nhận vị trí người dùng và cập nhật camera

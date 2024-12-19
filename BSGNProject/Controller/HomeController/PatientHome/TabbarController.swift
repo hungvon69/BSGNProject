@@ -16,7 +16,8 @@ class TabbarController: UITabBarController {
     private func setupTab() {
         let home = self.createNav(with: "Trang chủ", and: UIImage(systemName: "house"), vc: HomeViewController())
         let moreTab = self.createNav(with: "Tài khoản", and: UIImage(systemName: "person"), vc: MoreTabViewController())
-        self.setViewControllers([home, moreTab], animated: true)
+        let myAppointmentVC = self.createNav(with: "Cuộc hẹn", and: UIImage(systemName: "calendar.and.person"), vc: PatientAppointmentViewController())
+        self.setViewControllers([home, moreTab, myAppointmentVC], animated: true)
         self.tabBar.backgroundColor = .white
         self.tabBar.tintColor = mainColor
     }

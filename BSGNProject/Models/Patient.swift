@@ -8,17 +8,21 @@
 import Foundation
 struct Patient: Codable {
     var id: String
-    var fullName: String
     var name: String
     var lastName: String
-    var email: String
     var phoneNumber: String
     var address: String
-    var provide: String
+    var province: String
     var district: String
+    var xa: String
     var dateOfBirth: String
     var avatar: String
-    var sex: Int
-    var blood: Int
+    var sex: String
+    var blood: String
+    var identifyNumber: String
+    var longitude: Double
+    var latitude: Double
+    var balance: Int
+    var isInAppointment: Int
     var typeOfAccount: Int = 0 // Mặc định là 0 cho patient
 }

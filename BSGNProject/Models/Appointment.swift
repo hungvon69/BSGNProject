@@ -13,48 +13,45 @@ enum AppointmentStatus: String {
     case closed
 }
 
-struct Appointment {
-    let id: String
-    let doctorID: String
-    let doctorName: String
-    let patientID: String
-    let patientName: String
-    let specialty: String
-    let price: Double
-    let date: Date
-    var status: AppointmentStatus
+struct Appointment: Codable {
+    var id: String
+    var doctorID: String
+    var doctorName: String
+    var patientID: String
+    var patientName: String
+    var specialty: String
+    var specialtyID: Int
+    var price: Int
+    var date: String
+    var longitude: Double
+    var latitude: Double
+    var position: String
+    var positionNote: String
+    var symtoms: String
+    var status: String
+
+
     
-    init(id: String = UUID().uuidString,
-         doctorID: String,
-         doctorName: String,
-         patientID: String,
-         patientName: String,
-         specialty: String,
-         price: Double,
-         date: Date,
-         status: AppointmentStatus = .pending) {
-        self.id = id
-        self.doctorID = doctorID
-        self.doctorName = doctorName
-        self.patientID = patientID
-        self.patientName = patientName
-        self.specialty = specialty
-        self.price = price
-        self.date = date
-        self.status = status
-    }
-    
-    // Chuyển đổi dữ liệu thành dictionary để lưu vào Firebase
+
+}
+extension Appointment {
     func toDictionary() -> [String: Any] {
         return [
+            "id": id,
             "doctorID": doctorID,
             "doctorName": doctorName,
             "patientID": patientID,
             "patientName": patientName,
-            "specialty": specialty,
+            "specialtyID": specialtyID,
             "price": price,
-            "date": ISO8601DateFormatter().string(from: date),
-            "status": status.rawValue
+            "date": date,
+            "longitude": longitude,
+            "latitude": latitude,
+            "position": position,
+            "positionNote": positionNote,
+            "symtoms": symtoms,
+            "status": status,
+            "specialty": specialty
         ]
     }
 }

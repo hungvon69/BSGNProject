@@ -12,12 +12,26 @@ class GlobalService {
         "patientID": "00",
         "doctorName": "00",
         "patientName": "00",
+        "specialtyID": 0,
         "specialty": "00",
         "date": "00",
-        "price": "00",
-        "status": "00"
-
+        "price": 0,
+        "status": "Pending",
+        "longitude": 0,
+        "latitude": 0,
+        "position": "00",
+        "positionNote": "00",
+        "symtoms": "00"
     ]
+    let specialtyMapping: [Int: String] = [
+        1: "Bệnh tim",
+        2: "Bệnh về da",
+        3: "Bệnh tiêu hóa",
+        4: "Bệnh xương khớp",
+        5: "Bệnh thần kinh",
+        // Thêm các chuyên khoa khác theo yêu cầu
+    ]
+
     static let shared = GlobalService()
     private let databaseRef = Database.database().reference().child("users")
     private let storage = Storage.storage().reference()
@@ -25,6 +39,333 @@ class GlobalService {
     
     private init() {}
     
+    
+    
+    func uploadAppointment(completion: @escaping (Bool, Error?) -> Void) {
+        // Tạo ID ngẫu nhiên cho cuộc hẹn
+        let appointmentID = database.child("appointments").childByAutoId().key ?? "unknownID"
+        
+        // Cập nhật `id` trong dữ liệu appointmentData
+        GlobalService.appointmentData["id"] = appointmentID
+        
+        // Đường dẫn trong database nơi lưu dữ liệu cuộc hẹn
+        let appointmentRef = database.child("appointments").child(appointmentID)
+        
+        // Upload dữ liệu từ `appointmentData`
+        appointmentRef.setValue(GlobalService.appointmentData) { error, _ in
+            if let error = error {
+                print("Failed to upload appointment: \(error.localizedDescription)")
+                completion(false, error) // Trả về thất bại và lỗi
+            } else {
+                print("Appointment uploaded successfully!")
+                completion(true, nil) // Trả về thành công
+            }
+        }
+    }
+
+    
+    func fetchAppointments(completion: @escaping ([Appointment]) -> Void, majorID: Int) {
+        Database.database().reference().child("appointments").observeSingleEvent(of: .value) { snapshot in
+            print("Snapshot: \(snapshot.value ?? "No Data")")
+            
+            var appointments: [Appointment] = []
+            
+            for child in snapshot.children {
+                guard
+                    let childSnapshot = child as? DataSnapshot,
+                    let data = childSnapshot.value as? [String: Any],
+                    let doctorID = data["doctorID"] as? String,
+                    let doctorName = data["doctorName"] as? String,
+                    let patientID = data["patientID"] as? String,
+                    let patientName = data["patientName"] as? String,
+                    let specialty = data["specialty"] as? String,
+                    let specialtyID = data["specialtyID"] as? Int,
+                    let price = data["price"] as? Int,
+                    let longitude = data["longitude"] as? Double,
+                    let latitude = data["latitude"] as? Double,
+                    let status = data["status"] as? String,
+                    let position = data["position"] as? String,
+                    let positionNote = data["positionNote"] as? String,
+                    let symtoms = data["symtoms"] as? String,
+                    let date = data["date"] as? String
+                else {
+                    print("Invalid appointment data for child: \(child)")
+                    continue
+                }
+                
+                let appointment = Appointment(
+                    id: childSnapshot.key,
+                    doctorID: doctorID,
+                    doctorName: doctorName,
+                    patientID: patientID,
+                    patientName: patientName,
+                    specialty: specialty,
+                    specialtyID: specialtyID,
+                    price: price,
+                    date: date,
+                    longitude: longitude,
+                    latitude: latitude,
+                    position: position,
+                    positionNote: positionNote,
+                    symtoms: symtoms,
+                    status: status
+                )
+                
+                if appointment.specialtyID == majorID {
+                    appointments.append(appointment)
+                }
+            }
+            
+            if appointments.isEmpty {
+                print("No appointments found for majorID \(majorID)")
+            }
+            
+            completion(appointments)
+        }
+    }
+    
+    func fetchAppointmentsWithPatientID(completion: @escaping ([Appointment]) -> Void, patient: String) {
+        Database.database().reference().child("appointments").observeSingleEvent(of: .value) { snapshot in
+            print("Snapshot: \(snapshot.value ?? "No Data")")
+            
+            var appointments: [Appointment] = []
+            
+            for child in snapshot.children {
+                guard
+                    let childSnapshot = child as? DataSnapshot,
+                    let data = childSnapshot.value as? [String: Any],
+                    let doctorID = data["doctorID"] as? String,
+                    let doctorName = data["doctorName"] as? String,
+                    let patientID = data["patientID"] as? String,
+                    let patientName = data["patientName"] as? String,
+                    let specialty = data["specialty"] as? String,
+                    let specialtyID = data["specialtyID"] as? Int,
+                    let price = data["price"] as? Int,
+                    let longitude = data["longitude"] as? Double,
+                    let latitude = data["latitude"] as? Double,
+                    let status = data["status"] as? String,
+                    let position = data["position"] as? String,
+                    let positionNote = data["positionNote"] as? String,
+                    let symtoms = data["symtoms"] as? String,
+                    let date = data["date"] as? String
+                else {
+                    print("Invalid appointment data for child: \(child)")
+                    continue
+                }
+                
+                let appointment = Appointment(
+                    id: childSnapshot.key,
+                    doctorID: doctorID,
+                    doctorName: doctorName,
+                    patientID: patientID,
+                    patientName: patientName,
+                    specialty: specialty,
+                    specialtyID: specialtyID,
+                    price: price,
+                    date: date,
+                    longitude: longitude,
+                    latitude: latitude,
+                    position: position,
+                    positionNote: positionNote,
+                    symtoms: symtoms,
+                    status: status
+                )
+                
+                if appointment.patientID == patient {
+                    appointments.append(appointment)
+                    print("======")
+                }
+            }
+            
+            if appointments.isEmpty {
+                print("No appointments found for patient \(patient)")
+            }
+            
+            completion(appointments)
+        }
+    }
+    func loadAppointmentWithID(appointmentID: String, completion: @escaping (Result<Appointment, Error>) -> Void) {
+        // Đường dẫn tới cuộc hẹn trong Firebase
+        let appointmentRef = database.child("appointments").child(appointmentID)
+
+        // Lấy dữ liệu từ Firebase
+        appointmentRef.observeSingleEvent(of: .value) { snapshot  in
+            guard let data = snapshot.value as? [String: Any] else {
+                let error = NSError(domain: "com.example.app", code: 404, userInfo: [NSLocalizedDescriptionKey: "Appointment not found"])
+                completion(.failure(error))
+                return
+            }
+
+            // Parse dữ liệu từ snapshot
+            guard
+                let doctorID = data["doctorID"] as? String,
+                let doctorName = data["doctorName"] as? String,
+                let patientID = data["patientID"] as? String,
+                let patientName = data["patientName"] as? String,
+                let specialty = data["specialty"] as? String,
+                let specialtyID = data["specialtyID"] as? Int,
+                let price = data["price"] as? Int,
+                let longitude = data["longitude"] as? Double,
+                let latitude = data["latitude"] as? Double,
+                let status = data["status"] as? String,
+                let position = data["position"] as? String,
+                let positionNote = data["positionNote"] as? String,
+                let symtoms = data["symtoms"] as? String,
+                let date = data["date"] as? String
+            else {
+                let error = NSError(domain: "com.example.app", code: 404, userInfo: [NSLocalizedDescriptionKey: "Appointment not found"])
+                completion(.failure(error))
+                return
+            }
+
+            // Tạo đối tượng Appointment từ dữ liệu
+            let appointment = Appointment(
+                id: appointmentID,
+                doctorID: doctorID,
+                doctorName: doctorName,
+                patientID: patientID,
+                patientName: patientName,
+                specialty: specialty,
+                specialtyID: specialtyID,
+                price: price,
+                date: date,
+                longitude: longitude,
+                latitude: latitude,
+                position: position,
+                positionNote: positionNote,
+                symtoms: symtoms,
+                status: status
+            )
+
+            // Trả về kết quả thành công
+            completion(.success(appointment))
+        } withCancel: { error in
+            // Xử lý lỗi khi truy vấn Firebase
+            completion(.failure(error))
+        }
+    }
+    func updateAppointmentStatus(appointment: Appointment, doctorID: String, doctorName: String) {
+        let updatedAppointment = Appointment(
+            id: appointment.id,
+            doctorID: appointment.doctorID,
+            doctorName: appointment.doctorName,
+            patientID: appointment.patientID,
+            patientName: appointment.patientName,
+            specialty: appointment.specialty,
+            specialtyID: appointment.specialtyID,
+            price: appointment.price,
+            date: appointment.date,
+            longitude: appointment.longitude,
+            latitude: appointment.latitude,
+            position: appointment.position,
+            positionNote: appointment.positionNote,
+            symtoms: appointment.symtoms,
+            status: "accepted"
+        )
+
+        // Gửi cập nhật vào Firebase
+        let ref = Database.database().reference().child("appointments").child(appointment.id)
+        ref.setValue(updatedAppointment.toDictionary())
+    }
+    func loadPatientWithID(patientID: String, completion: @escaping (Result<Patient, Error>) -> Void) {
+        // Đường dẫn tới bệnh nhân trong Firebase
+        let patientRef = database.child("users").child("patients").child(patientID)
+        print(patientRef)
+
+        // Lấy dữ liệu từ Firebase
+        patientRef.observeSingleEvent(of: .value) { snapshot in
+            guard let data = snapshot.value as? [String: Any] else {
+                let error = NSError(domain: "com.example.app", code: 404, userInfo: [NSLocalizedDescriptionKey: "Patient not found"])
+                completion(.failure(error))
+                return
+            }
+
+            // Parse dữ liệu từ snapshot
+            guard
+                let id = data["id"] as? String,
+                let name = data["name"] as? String,
+                let lastName = data["lastName"] as? String,
+                let phoneNumber = data["phoneNumber"] as? String,
+                let address = data["address"] as? String,
+                let province = data["province"] as? String,
+                let district = data["district"] as? String,
+                let xa = data["xa"] as? String,
+                let dateOfBirth = data["dateOfBirth"] as? String,
+                let avatar = data["avatar"] as? String,
+                let sex = data["sex"] as? String,
+                let blood = data["blood"] as? String,
+                let identifyNumber = data["identifyNumber"] as? String,
+                let longitude = data["longitude"] as? Double,
+                let latitude = data["latitude"] as? Double,
+                let balance = data["balance"] as? Int,
+                let isInAppointment = data["isInAppointment"] as? Int,
+                let typeOfAccount = data["typeOfAccount"] as? Int
+            else {
+                let error = NSError(domain: "com.example.app", code: 500, userInfo: [NSLocalizedDescriptionKey: "Invalid patient data"])
+                completion(.failure(error))
+                return
+            }
+
+            // Tạo đối tượng Patient từ dữ liệu
+            let patient = Patient(
+                id: id,
+                name: name,
+                lastName: lastName,
+                phoneNumber: phoneNumber,
+                address: address,
+                province: province,
+                district: district,
+                xa: xa,
+                dateOfBirth: dateOfBirth,
+                avatar: avatar,
+                sex: sex,
+                blood: blood,
+                identifyNumber: identifyNumber,
+                longitude: longitude,
+                latitude: latitude,
+                balance: balance,
+                isInAppointment: isInAppointment,
+                typeOfAccount: typeOfAccount
+            )
+
+            // Trả về kết quả thành công
+            completion(.success(patient))
+        } withCancel: { error in
+            // Xử lý lỗi khi truy vấn Firebase
+            completion(.failure(error))
+        }
+    }
+    func loadDoctorWithID(doctorID: String, completion: @escaping (Result<Doctor, Error>) -> Void) {
+        // Đường dẫn tới doctor trong Firebase
+        let doctorRef = database.child("users").child("doctors").child(doctorID)
+        
+        // Lấy dữ liệu từ Firebase
+        doctorRef.observeSingleEvent(of: .value, with: { snapshot in
+            guard let value = snapshot.value else {
+                let error = NSError(domain: "com.example.app", code: 404, userInfo: [NSLocalizedDescriptionKey: "Doctor not found"])
+                completion(.failure(error))
+                return
+            }
+            
+            do {
+                // Chuyển dữ liệu snapshot thành JSON
+                let jsonData = try JSONSerialization.data(withJSONObject: value, options: [])
+                let decoder = JSONDecoder()
+                
+                // Decode JSON thành Doctor
+                let doctor = try decoder.decode(Doctor.self, from: jsonData)
+                completion(.success(doctor))
+            } catch {
+                let parseError = NSError(domain: "com.example.app", code: 500, userInfo: [NSLocalizedDescriptionKey: "Failed to parse doctor data"])
+                completion(.failure(parseError))
+            }
+            
+        }) { error in
+            // Xử lý lỗi khi truy cập Firebase
+            completion(.failure(error))
+        }
+    }
+
     // MARK: - Register User
     func registerUser(email: String, password: String, isDoctor: Bool, additionalInfo: [String: Any], completion: @escaping (Result<Void, Error>) -> Void) {
         Auth.auth().createUser(withEmail: email, password: password) { authResult, error in
@@ -174,41 +515,50 @@ class GlobalService {
             }
         }
     }
-    func fetchAppointments(completion: @escaping ([Appointment]) -> Void) {
-        databaseRef.observeSingleEvent(of: .value) { snapshot in
-            var appointments: [Appointment] = []
-            
-            for child in snapshot.children {
-                if let childSnapshot = child as? DataSnapshot,
-                   let data = childSnapshot.value as? [String: Any],
-                   let doctorID = data["doctorID"] as? String,
-                   let doctorName = data["doctorName"] as? String,
-                   let patientID = data["patientID"] as? String,
-                   let patientName = data["patientName"] as? String,
-                   let specialty = data["specialty"] as? String,
-                   let price = data["price"] as? Double,
-                   let dateStr = data["date"] as? String,
-                   let statusStr = data["status"] as? String,
-                   let status = AppointmentStatus(rawValue: statusStr),
-                   let date = ISO8601DateFormatter().date(from: dateStr) {
-                    
-                    let appointment = Appointment(
-                        id: childSnapshot.key,
-                        doctorID: doctorID,
-                        doctorName: doctorName,
-                        patientID: patientID,
-                        patientName: patientName,
-                        specialty: specialty,
-                        price: price,
-                        date: date,
-                        status: status
-                    )
-                    appointments.append(appointment)
-                }
+    func updateDoctorInfo(doctor: Doctor, completion: @escaping (Result<Void, Error>) -> Void) {
+        // Đường dẫn tới thông tin doctor trong Firebase
+        let doctorRef = database.child("users").child("doctors").child(doctor.id)
+
+        // Chuyển đối tượng Doctor thành từ điển
+        guard let doctorData = try? JSONEncoder().encode(doctor),
+              let doctorDict = try? JSONSerialization.jsonObject(with: doctorData, options: []) as? [String: Any] else {
+            let error = NSError(domain: "com.example.app", code: 500, userInfo: [NSLocalizedDescriptionKey: "Failed to encode doctor data"])
+            completion(.failure(error))
+            return
+        }
+
+        // Cập nhật dữ liệu lên Firebase
+        doctorRef.updateChildValues(doctorDict) { error, _ in
+            if let error = error {
+                completion(.failure(error))
+            } else {
+                completion(.success(()))
             }
-            completion(appointments)
         }
     }
+    func updatePatientInfo(patient: Patient, completion: @escaping (Result<Void, Error>) -> Void) {
+        // Đường dẫn tới thông tin patient trong Firebase
+        let patientRef = database.child("users").child("patients").child(patient.id)
+
+        // Chuyển đối tượng Patient thành từ điển
+        guard let patientData = try? JSONEncoder().encode(patient),
+              let patientDict = try? JSONSerialization.jsonObject(with: patientData, options: []) as? [String: Any] else {
+            let error = NSError(domain: "com.example.app", code: 500, userInfo: [NSLocalizedDescriptionKey: "Failed to encode patient data"])
+            completion(.failure(error))
+            return
+        }
+
+        // Cập nhật dữ liệu lên Firebase
+        patientRef.updateChildValues(patientDict) { error, _ in
+            if let error = error {
+                completion(.failure(error))
+            } else {
+                completion(.success(()))
+            }
+        }
+    }
+
+
     func fetchDoctorProfile(uid: String, completion: @escaping (Result<(String, String), Error>) -> Void) {
         // Truy cập vào đường dẫn của doctor trong Firebase
         let doctorRef = self.databaseRef.child("doctors").child(uid)

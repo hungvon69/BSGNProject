@@ -172,7 +172,7 @@ class RegisterPatientViewController: UIViewController, UITextFieldDelegate {
             }
             // Khi tạo user thành công, chuyển sang màn hình nhập thông tin cá nhân
             print("User created successfully")
-            let personalInfoVC = PatientsFormViewController() // Đảm bảo đã set up storyboard hoặc tạo VC
+            let personalInfoVC = NewPatientFormViewController() // Đảm bảo đã set up storyboard hoặc tạo VC
             self.navigationController?.pushViewController(personalInfoVC, animated: true)
         }
     }
@@ -183,7 +183,7 @@ class RegisterPatientViewController: UIViewController, UITextFieldDelegate {
                 return
             }
             print("User created successfully")
-            let personalInfoVC = DoctorsFormViewController() 
+            let personalInfoVC = NewDoctorFormViewController    ()
             self.navigationController?.pushViewController(personalInfoVC, animated: true)
             
         }

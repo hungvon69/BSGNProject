@@ -136,6 +136,7 @@ class LoginViewController: UIViewController, UITextFieldDelegate {
                     self.fetchDoctorAttributes(userId: userId)
                     let Vc = DoctorHomeViewController()
                     self.navigationController?.pushViewController(Vc, animated: true)
+                    Vc.navigationController?.navigationBar.isHidden = true
                 } else {
                     ref.child("users").child("patients").child(userId).observeSingleEvent(of: .value) { (snapshot) in
                         if snapshot.exists() {
@@ -188,17 +189,16 @@ class LoginViewController: UIViewController, UITextFieldDelegate {
             }
             
             print("Patient's attributes:")
-            print("First Name: \(data["firstName"] ?? "")")
+            print("First Name: \(data["name"] ?? "")")
             print("Last Name: \(data["lastName"] ?? "")")
             print("Date of Birth: \(data["dateOfBirth"] ?? "")")
-            print("Gender: \(data["gender"] ?? "")")
+            print("Gender: \(data["sex"] ?? "")")
             print("Phone Number: \(data["phoneNumber"] ?? "")")
-            print("Email: \(data["email"] ?? "")")
             print("District: \(data["district"] ?? "")")
-            print("City: \(data["city"] ?? "")")
-            print("Street: \(data["street"] ?? "")")
+            print("Province: \(data["province"] ?? "")")
+            print("xa: \(data["xa"] ?? "")")
             print("Address: \(data["address"] ?? "")")
-            print("Blood Name: \(data["bloodName"] ?? "")")
+            print("Blood Name: \(data["blood"] ?? "")")
         }
     }
 }

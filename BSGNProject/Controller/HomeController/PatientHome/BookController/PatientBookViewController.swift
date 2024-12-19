@@ -17,6 +17,7 @@ class PatientBookViewController: UIViewController, UIPickerViewDelegate, UIPicke
     }
     func pickerView(_ pickerView: UIPickerView, didSelectRow row: Int, inComponent component: Int) {
         majorTextField.text = majorData[row]
+        GlobalService.appointmentData["specialtyID"] = row + 1
     }
     func pickerView(_ pickerView: UIPickerView, titleForRow row: Int, forComponent component: Int) -> String? {
         return majorData[row]
@@ -29,7 +30,7 @@ class PatientBookViewController: UIViewController, UIPickerViewDelegate, UIPicke
     @IBOutlet private weak var backgroundImageVIew: UIImageView!
     @IBOutlet private weak var majorPickerView: UIPickerView!
     
-    private let majorData: [String] = ["Bệnh nhiễm trùng", "Bệnh về hô hấp", "Vấn đề về tiêu hóa", "Bệnh về tim mạch", "Rối loạn thần kinh và tâm lý", "Vấn đề về da liễu", "Vấn đề về xương khớp và cơ bắp", "Vấn đề nội tiết và chuyển hóa", "Các vấn đề khác"]
+    private let majorData: [String] = ["Tim mạch", "Da liễu", "Thần kinh", "Nhi khoa", "Chỉnh hình", "Nhãn khoa", "Tiêu hóa", "Hô hấp", "Sản khoa", "Nội tiết"]
     private var keyboardTextFields: UITextField!
      
     override func viewDidLoad() {
@@ -87,6 +88,24 @@ class PatientBookViewController: UIViewController, UIPickerViewDelegate, UIPicke
         
         addDoneButtonToKeyboard()
     }
+    func addDoneButtonToPickerView() {
+        let toolbar = UIToolbar()
+        toolbar.sizeToFit()
+        
+        // Nút Done
+        let doneButton = UIBarButtonItem(title: "Done", style: .plain, target: self, action: #selector(dismissPickerView))
+        
+        // Khoảng trắng để đẩy nút Done sang phải
+        let flexibleSpace = UIBarButtonItem(barButtonSystemItem: .flexibleSpace, target: nil, action: nil)
+        
+        toolbar.setItems([flexibleSpace, doneButton], animated: false)
+        
+        // Gắn toolbar vào inputAccessoryView của UITextField
+        majorTextField.inputAccessoryView = toolbar
+    }
+    
+    
+    // MARK: - UIPickerViewDelegate & UIPickerViewDataSource
     @objc private func dismissPickerView() {
         if majorPickerView.isHidden {
             UIView.animate(withDuration: 0.1) {
@@ -143,8 +162,12 @@ class PatientBookViewController: UIViewController, UIPickerViewDelegate, UIPicke
 //        alert.addAction(cancelAction)
 //        present(alert, animated: true, completion: nil)
         if let navController = self.navigationController {
-            let mapVC = GoogleMapsViewController(nibName: "GoogleMapsViewController", bundle: nil)
+            let mapVC = PositionViewController()
             navController.pushViewController(mapVC, animated: true)
+            mapVC.setupNavigationBar(with: "Xác nhận vị trí của bạn", with: false)
+            GlobalService.appointmentData["specialty"] = majorTextField.text
+
+            GlobalService.appointmentData["symtoms"] =  detailMedicalLabel.text
         } else {
             print("Navigation controller is nil")
         }

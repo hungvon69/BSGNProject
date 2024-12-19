@@ -61,8 +61,8 @@ class DoctorCollectionViewCell: UICollectionViewCell, SummaryMethod {
                             }
             }
         }
-        starLabel.text = String(format: "%.1f", doctor.star)
-        reviewerCountLabel.text = "(\(doctor.numberOfReviewer))"
+        starLabel.text = ""
+        reviewerCountLabel.text = ""
         majorNameLabel.text = doctor.major
         doctorNameLabel.text = doctor.firstName + " " + doctor.lastName
     }

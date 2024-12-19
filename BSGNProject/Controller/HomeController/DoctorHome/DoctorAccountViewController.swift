@@ -1,36 +1,48 @@
 //
-//  MoreTabViewController.swift
+//  DoctorAccountViewController.swift
 //  BSGNProject
 //
-//  Created by Hùng Nguyễn on 2/10/24.
+//  Created by Hùng Nguyễn on 19/12/24.
 //
 
 import UIKit
 import FirebaseAuth
 
-class MoreTabViewController: UIViewController, UITableViewDelegate, UITableViewDataSource, LogoutCellDelegate {
-    
+class DoctorAccountViewController: UIViewController {
 
-    @IBOutlet private weak var moreTabTableView: UITableView!
+    @IBOutlet weak var editButton: UIButton!
+    @IBOutlet weak var priceLabel: UILabel!
+    @IBOutlet weak var workLabel: UILabel!
+    @IBOutlet weak var dobLabel: UILabel!
+    @IBOutlet weak var graduatedLabel: UILabel!
+    @IBOutlet weak var phoneNumLabel: UIButton!
+    @IBOutlet weak var majorLabel: UILabel!
+    @IBOutlet weak var nameLabel: UILabel!
+    @IBOutlet weak var doctorAvatarImageView: UIImageView!
     override func viewDidLoad() {
         super.viewDidLoad()
-        moreTabTableView.delegate = self
-        moreTabTableView.dataSource = self
-        moreTabTableView.registerNib(cellType: MoreTabTableViewCell.self)
+
+        configure()
     }
-    func tableView(_ tableView: UITableView, numberOfRowsInSection section: Int) -> Int {
-        return 1
+    func configure() {
+        guard let user = Auth.auth().currentUser?.uid else { return }
+        GlobalService.shared.loadDoctorWithID(doctorID: user) { userprofile in
+            switch userprofile {
+            case .success(let userprofile):
+                print(userprofile)
+                self.nameLabel.text = "\(userprofile.firstName) \(userprofile.lastName)"
+                self.majorLabel.text = userprofile.major
+                self.phoneNumLabel.setTitle(userprofile.phoneNumber, for: .normal)
+                self.workLabel.text = userprofile.education
+                self.dobLabel.text = userprofile.dateOfBirth
+            case .failure(let error):
+                print(error)
+            }
+            
+        }
     }
-    
-    func tableView(_ tableView: UITableView, cellForRowAt indexPath: IndexPath) -> UITableViewCell {
-        let cell = moreTabTableView.dequeue(cellType: MoreTabTableViewCell.self, for: indexPath)
-        cell.delegate = self
-        return cell
-    }
-    func tableView(_ tableView: UITableView, heightForRowAt indexPath: IndexPath) -> CGFloat {
-        return 800
-    }
-    func didTapLogout() {
+
+    @IBAction func logOutTapped(_ sender: Any) {
         let alert = UIAlertController(title: "Đăng xuất", message: "Bạn có chắc chắn muốn đăng xuất?", preferredStyle: .alert)
         
         // Nút Xác nhận

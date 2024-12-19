@@ -6,6 +6,7 @@
 //
 
 import UIKit
+import FirebaseAuth
 
 class MoreTabTableViewCell: UITableViewCell, SummaryMethod {
 
@@ -20,6 +21,9 @@ class MoreTabTableViewCell: UITableViewCell, SummaryMethod {
     @IBOutlet private weak var rateButton: UIButton!
     @IBOutlet private weak var avatarLabel: UIImageView!
     @IBOutlet private weak var nameAccountLabel: UILabel!
+    
+    weak var delegate: LogoutCellDelegate?
+    
     override func awakeFromNib() {
         super.awakeFromNib()
         setupShadow()
@@ -56,4 +60,10 @@ class MoreTabTableViewCell: UITableViewCell, SummaryMethod {
         avatarLabel.layer.borderColor = UIColor.gray.cgColor
         avatarLabel.layer.borderWidth = 0.5
     }
+    @IBAction func signOutTapped(_ sender: Any) {
+        delegate?.didTapLogout()
+    }
+}
+protocol LogoutCellDelegate: AnyObject {
+    func didTapLogout()
 }

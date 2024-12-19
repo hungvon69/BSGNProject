@@ -52,15 +52,17 @@ class HomeViewController: UIViewController, UITableViewDelegate, UITableViewData
             GlobalService.shared.fetchUserData(uid: userID, isDoctor: false) { Result in
                 switch Result {
                 case .success(let user):
-                    self.currentUser = user as! Patient
+                    self.currentUser = (user as! Patient)
                 case .failure(let error):
                     print(error)
+                    print("============================")
                 }
             }
         }
         nameAccLabel.text = currentUser?.phoneNumber
         
     }
+    
     
     func tableView(_ tableView: UITableView, numberOfRowsInSection section: Int) -> Int {
         return HomeCells.count
@@ -184,6 +186,21 @@ class HomeViewController: UIViewController, UITableViewDelegate, UITableViewData
         self.navigationController?.pushViewController(bookVC, animated: true)
         bookVC.setupNavigationBar(with: "", with: false)
         bookVC.navigationController?.navigationBar.backgroundColor = .clear
+        GlobalService.appointmentData["patientID"] = Auth.auth().currentUser?.uid
+        let userRef = Database.database().reference()
+            .child("users")
+            .child("patients")
+            .child(Auth.auth().currentUser?.uid ?? "")
+            .child("name")
+
+        userRef.observeSingleEvent(of: .value) { snapshot in
+            if let firstName = snapshot.value as? String {
+                GlobalService.appointmentData["patientName"] = firstName
+                print("Patient name updated: \(firstName)")
+            } else {
+                print("Failed to retrieve patient's first name")
+            }
+        }
+        
     }
-    
 }
